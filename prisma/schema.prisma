@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Project {
+  id           String   @id @default(cuid())
+  rank         Int
+  title        String
+  slogan       String
+  description  String
+  liveLink     String?
+  githubUrl    String?
+  thumbnailUrl String? 
+  isPersonal   Boolean  @default(true)
+  pictures     ProjectPicture[]
+  videos       ProjectVideo[]
+  skills       ProjectSkill[]
+  createdAt    DateTime @default(now())
+}
+
+model ProjectPicture {
+  id        String  @id @default(cuid())
+  url       String  
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectVideo {
+  id        String  @id @default(cuid())
+  url       String  
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectSkill {
+  id        String  @id @default(cuid())
+  name      String  
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
