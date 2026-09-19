@@ -23,6 +23,7 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
     include: {
       pictures: true,
       videos: true,
+      skills: true,
     },
   });
 
@@ -30,7 +31,6 @@ async function ProjectContent({ params }: { params: Promise<{ id: string }> }) {
     notFound();
   }
 
-  // Passing the full project data (with media) into your showcase layout
   return <ProjectShowcase project={project} />;
 }
 

@@ -18,13 +18,19 @@ type ProjectWithMedia = {
   liveLink: string | null;
   githubUrl: string | null;
   thumbnailUrl: string | null;
+  isPersonal: boolean;
+  skills: { name: string }[];
   pictures: { id: string; url: string }[];
   videos: { id: string; url: string }[];
 };
 
+function toAbsoluteUrl(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
 export function ProjectShowcase({ project }: { project: ProjectWithMedia }) {
   const mediaPlaylist: MediaItem[] = [];
-  
+
   if (project.thumbnailUrl) {
     mediaPlaylist.push({ id: 'hero-thumb', type: 'image', url: project.thumbnailUrl });
   }
@@ -41,24 +47,10 @@ export function ProjectShowcase({ project }: { project: ProjectWithMedia }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const activeMedia = mediaPlaylist[activeIndex];
 
-  const projectTypePlaceholder = "Freelance Project"; 
-  const skillsPlaceholder = ["Next.js", "TypeScript", "TailwindCSS", "Prisma", "SQLite", "Turbopack"];
-
-  const formatVideoEmbed = (url: string) => {
-    if (url.includes('youtube.com/watch?v=')) {
-      return url.replace('watch?v=', 'embed/');
-    }
-    if (url.includes('youtu.be/')) {
-      const id = url.split('youtu.be/')[1]?.split('?')[0];
-      return `https://www.youtube.com/embed/${id}`;
-    }
-    return url;
-  };
-
   return (
     <main className="min-h-screen bg-main text-default p-4 md:p-12 font-sans selection:bg-primary/30">
       <div className="max-w-7xl mx-auto space-y-6">
-        
+
         <div className="flex items-center justify-between text-xs font-mono text-muted uppercase tracking-wider">
           <Link href="/dashboard" className="hover:text-primary transition-colors">
             ← Home
@@ -75,87 +67,82 @@ export function ProjectShowcase({ project }: { project: ProjectWithMedia }) {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 bg-surface/40 p-4 rounded-xl border border-surface/60 shadow-2xl backdrop-blur-md items-start">
-          
-          <div className="lg:col-span-7 space-y-3 flex flex-col justify-start">
-  
-  <div className="relative w-full aspect-video bg-black/80 rounded-lg overflow-hidden border border-surface group shadow-inner">
-    {hasMedia ? (
-      activeMedia.type === 'video' ? (
-        <iframe
-          src={formatVideoEmbed(activeMedia.url)}
-          className="w-full h-full object-cover"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          title="Project Video Stream"
-        />
-      ) : (
-        <Image
-          src={activeMedia.url}
-          alt={`${project.title} asset view`}
-          fill
-          sizes="(max-w-1200px) 100vw, 60vw"
-          priority
-          className="object-contain select-none transition-all duration-300"
-        />
-      )
-    ) : (
-      <div className="w-full h-full flex items-center justify-center text-muted text-sm font-mono">
-        [ NO DISPLAY ASSETS INITIALIZED ]
-      </div>
-    )}
-  </div>
 
-  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-surface scrollbar-track-transparent">
-    {mediaPlaylist.map((item, idx) => {
-      const isActive = idx === activeIndex;
-      return (
-        <button
-          key={item.id}
-          onClick={() => setActiveIndex(idx)}
-          className={`relative flex-shrink-0 w-24 aspect-video rounded md:rounded-md overflow-hidden bg-black/40 border-2 transition-all cursor-pointer ${
-            isActive ? 'border-primary scale-[0.96] shadow-md' : 'border-surface hover:border-muted'
-          }`}
-        >
-          {item.type === 'video' ? (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-black/60 relative">
-              <span className="text-[10px] font-bold tracking-widest text-primary font-mono bg-main/90 px-1 py-0.5 rounded border border-primary/20">
-                VIDEO
-              </span>
+          <div className="lg:col-span-7 space-y-3 flex flex-col justify-start">
+
+            <div className="relative w-full aspect-video bg-black/80 rounded-lg overflow-hidden border border-surface group shadow-inner">
+              {hasMedia ? (
+                activeMedia.type === 'video' ? (
+                  <video
+                    key={activeMedia.url}
+                    src={activeMedia.url}
+                    controls
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <Image
+                    src={activeMedia.url}
+                    alt={`${project.title} asset view`}
+                    fill
+                    sizes="(max-w-1200px) 100vw, 60vw"
+                    priority
+                    className="object-contain select-none transition-all duration-300"
+                  />
+                )
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted text-sm font-mono">
+                  [ NO DISPLAY ASSETS INITIALIZED ]
+                </div>
+              )}
             </div>
-          ) : (
-            <Image 
-              src={item.url} 
-              alt="Thumbnail index selector" 
-              fill
-              sizes="96px"
-              className="object-cover opacity-70 group-hover:opacity-100" 
-            />
-          )}
-          {!isActive && <div className="absolute inset-0 bg-black/10 hover:bg-transparent transition-colors" />}
-        </button>
-      );
-    })}
-  </div>
-</div>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-surface scrollbar-track-transparent">
+              {mediaPlaylist.map((item, idx) => {
+                const isActive = idx === activeIndex;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveIndex(idx)}
+                    className={`relative flex-shrink-0 w-24 aspect-video rounded md:rounded-md overflow-hidden bg-black/40 border-2 transition-all cursor-pointer ${
+                      isActive ? 'border-primary scale-[0.96] shadow-md' : 'border-surface hover:border-muted'
+                    }`}
+                  >
+                    {item.type === 'video' ? (
+                      <video src={item.url} className="w-full h-full object-cover opacity-70 group-hover:opacity-100" muted />
+                    ) : (
+                      <Image
+                        src={item.url}
+                        alt="Thumbnail index selector"
+                        fill
+                        sizes="96px"
+                        className="object-cover opacity-70 group-hover:opacity-100"
+                      />
+                    )}
+                    {!isActive && <div className="absolute inset-0 bg-black/10 hover:bg-transparent transition-colors" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <div className="lg:col-span-5 flex flex-col justify-between space-y-6 bg-main/40 p-5 rounded-lg border border-surface/50 min-h-full self-stretch">
-            
+
             <div className="space-y-4">
               <div className="space-y-3">
                 <span className="text-[16px] font-mono tracking-wider text-muted uppercase block">Project Specification</span>
-                
+
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center text-xs font-mono font-bold tracking-wide bg-accent/10 text-accent border border-accent/20 px-2.5 py-1 rounded">
-                    {projectTypePlaceholder}
+                    {project.isPersonal ? 'Personal Project' : 'Freelance Project'}
                   </span>
                 </div>
 
                 <div className="space-y-1">
                   <span className="text-[11px] font-mono tracking-widest text-muted/80 uppercase block">Engine Stack</span>
                   <div className="flex flex-wrap gap-1.5">
-                    {skillsPlaceholder.map((skill, index) => (
+                    {project.skills.map((skill, index) => (
                       <span key={index} className="text-xs font-mono bg-surface text-default/90 border border-surface/80 px-2 py-0.5 rounded">
-                        {skill}
+                        {skill.name}
                       </span>
                     ))}
                   </div>
@@ -176,9 +163,9 @@ export function ProjectShowcase({ project }: { project: ProjectWithMedia }) {
             <div className="space-y-2 pt-4 border-t border-surface mt-auto">
               {project.liveLink && (
                 <a
-                  href={project.liveLink}
+                  href={toAbsoluteUrl(project.liveLink)}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-primary text-default font-bold text-sm py-3 px-4 rounded-lg shadow-lg hover:bg-primary/90 hover:scale-[1.01] transition-all"
                 >
                   🌐 Visit Live
@@ -187,9 +174,9 @@ export function ProjectShowcase({ project }: { project: ProjectWithMedia }) {
 
               {project.githubUrl && (
                 <a
-                  href={project.githubUrl}
+                  href={toAbsoluteUrl(project.githubUrl)}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-surface hover:bg-surface/80 border border-muted/20 text-default font-semibold text-sm py-2.5 px-4 rounded-lg transition-all hover:scale-[1.01] transition-all"
                 >
                   <code className="text-accent font-bold">&lt;/&gt;</code> Visit Github Repo
