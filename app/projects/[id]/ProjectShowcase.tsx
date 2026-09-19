@@ -52,7 +52,7 @@ export function ProjectShowcase({ project }: { project: ProjectWithMedia }) {
       <div className="max-w-7xl mx-auto space-y-6">
 
         <div className="flex items-center justify-between text-xs font-mono text-muted uppercase tracking-wider">
-          <Link href="/dashboard" className="hover:text-primary transition-colors">
+          <Link href="/" className="hover:text-primary transition-colors">
             ← Home
           </Link>
         </div>
